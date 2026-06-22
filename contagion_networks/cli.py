@@ -1,4 +1,4 @@
-"""CLI for Contagion Networks: simulate, analyze, visualize."""
+"""CLI for Contagion Networks: simulate, analyze, mitigate."""
 
 from __future__ import annotations
 

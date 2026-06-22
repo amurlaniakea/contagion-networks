@@ -215,3 +215,112 @@ class TestAgent:
     def test_effective_bias_capped(self):
         agent = Agent("a1", "model", EvaluatorBiasProfile.STRUCTURED, 0.7, 0.5)
         assert agent.effective_bias == 1.0  # Capped at 1.0
+
+
+# ==========================================
+# CLI subprocess tests (real invocation path)
+# ==========================================
+
+import subprocess
+import sys
+
+
+class TestCLI:
+    def test_simulate_basic(self):
+        """python3 -m contagion_networks simulate should succeed."""
+        result = subprocess.run(
+            [sys.executable, "-m", "contagion_networks", "simulate",
+             "--agents", "3", "--hops", "5"],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 0, f"stderr: {result.stderr}"
+        assert "Spectral Radius" in result.stdout
+
+    def test_simulate_json(self):
+        """simulate --json should return valid JSON with expected keys."""
+        result = subprocess.run(
+            [sys.executable, "-m", "contagion_networks", "simulate",
+             "--agents", "3", "--hops", "5", "--json"],
+            capture_output=True, text=True
+        )
+        assert result.returncode == 0, f"stderr: {result.stderr}"
+        data = json.loads(result.stdout)
+        assert "spectral_radius" in data
+        assert "regime" in data
+        assert data["num_agents"] == 3
+
+    def test_simulate_saves_output(self):
+        """simulate --output should write a JSON file."""
+        import tempfile, os
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as f:
+            out_path = f.name
+        try:
+            result = subprocess.run(
+                [sys.executable, "-m", "contagion_networks", "simulate",
+                 "--agents", "3", "--hops", "5", "--output", out_path, "--json"],
+                capture_output=True, text=True
+            )
+            assert result.returncode == 0, f"stderr: {result.stderr}"
+            assert os.path.exists(out_path)
+            with open(out_path) as f:
+                data = json.load(f)
+            assert "contagion_matrix" in data
+        finally:
+            os.unlink(out_path)
+
+    def test_analyze(self):
+        """analyze --matrix should read a saved simulation JSON."""
+        import tempfile, os, json as _json
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode="w") as f:
+            out_path = f.name
+        try:
+            # First simulate to get a valid JSON
+            subprocess.run(
+                [sys.executable, "-m", "contagion_networks", "simulate",
+                 "--agents", "3", "--hops", "5", "--output", out_path, "--json"],
+                capture_output=True, text=True
+            )
+            # Then analyze it
+            result = subprocess.run(
+                [sys.executable, "-m", "contagion_networks", "analyze",
+                 "--matrix", out_path],
+                capture_output=True, text=True
+            )
+            assert result.returncode == 0, f"stderr: {result.stderr}"
+            assert "Spectral Radius" in result.stdout
+            assert "Regime" in result.stdout
+        finally:
+            os.unlink(out_path)
+
+    def test_mitigate(self):
+        """mitigate --matrix --strategy committee should reduce spectral radius."""
+        import tempfile, os, json as _json
+        with tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode="w") as f:
+            out_path = f.name
+        try:
+            # Simulate a cascade case
+            subprocess.run(
+                [sys.executable, "-m", "contagion_networks", "simulate",
+                 "--agents", "5", "--hops", "10", "--coefficient", "0.5",
+                 "--output", out_path, "--json"],
+                capture_output=True, text=True
+            )
+            # Mitigate
+            result = subprocess.run(
+                [sys.executable, "-m", "contagion_networks", "mitigate",
+                 "--matrix", out_path, "--strategy", "committee", "--k", "3"],
+                capture_output=True, text=True
+            )
+            assert result.returncode == 0, f"stderr: {result.stderr}"
+            assert "Reduction" in result.stdout
+        finally:
+            os.unlink(out_path)
+
+    def test_no_args_shows_help(self):
+        """No arguments should print help and exit with error."""
+        result = subprocess.run(
+            [sys.executable, "-m", "contagion_networks"],
+            capture_output=True, text=True
+        )
+        assert result.returncode != 0
+        assert "usage" in result.stdout.lower() or "help" in result.stdout.lower()
