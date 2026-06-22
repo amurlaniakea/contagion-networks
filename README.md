@@ -31,19 +31,10 @@ contagion_networks/
 ├── core/
 │   ├── models.py          # Agent, Evaluator, Network models
 │   ├── contagion_matrix.py # Cross-Agent Contagion Matrix Γ
-│   └── simulation.py      # Multi-agent simulation engine
-├── metrics/
-│   ├── spectral.py        # Spectral radius, eigenvalues
-│   ├── propagation.py     # Contagion coefficients, hop analysis
-│   └── diversity.py       # Cognitive diversity metrics
-├── mitigation/
-│   ├── committee.py       # Committee-based mitigation
-│   ├── topology.py        # Network topology optimization
-│   └── threshold.py       # Critical diversity threshold
-├── visualization/
-│   ├── network_graph.py   # Agent network visualization
-│   └── propagation_heatmap.py # Contagion matrix heatmap
-└── cli.py                 # CLI interface
+│   ├── simulation.py      # Multi-agent simulation engine
+│   ├── analysis.py        # Analysis tools (diversity, attenuation, report)
+│   └── mitigation.py      # Mitigation strategies (committee, topology)
+└── cli.py                 # CLI interface (simulate, analyze, mitigate)
 ```
 
 ## Key Concepts
@@ -65,7 +56,9 @@ An N×N matrix where Γ[i][j] represents the contagion coefficient from agent i 
 
 ### Mitigation: Committee Size
 
-Increasing evaluator committee size from k=1 to k=3 reduces effective contagion by 72.4%.
+Increasing evaluator committee size from k=1 to k=3 reduces effective contagion by 66.7%
+(with default diversity_factor=0.5). The paper reports 72.4% for empirical measurements
+on specific model configurations.
 
 ## Quick Start
 
@@ -82,11 +75,15 @@ pip install -e .
 # Run simulation
 python3 -m contagion_networks simulate --agents 5 --hops 10
 
-# Analyze contagion
+# Analyze a saved matrix
+python3 -m contagion_networks simulate --agents 5 --hops 10 --output results.json
 python3 -m contagion_networks analyze --matrix results.json
 
-# Visualize
-python3 -m contagion_networks visualize --matrix results.json --output network.png
+# Apply mitigation
+python3 -m contagion_networks mitigate --matrix results.json --strategy committee --k 3
+
+# JSON output (all commands)
+python3 -m contagion_networks simulate --agents 5 --hops 10 --json
 ```
 
 ## License

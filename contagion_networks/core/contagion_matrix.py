@@ -21,6 +21,7 @@ class ContagionMatrix:
         if n == 0:
             return 0.0
         b = [1.0] * n
+        b_new = [0.0] * n
         for _ in range(100):
             b_new = [0.0] * n
             for i in range(n):
@@ -30,11 +31,9 @@ class ContagionMatrix:
             if norm < 1e-10:
                 return 0.0
             b = [x / norm for x in b_new]
-        eigenvalue = 0.0
-        for i in range(n):
-            row_sum = sum(self.matrix[i][j] * b[j] for j in range(n))
-            eigenvalue += abs(row_sum)
-        return eigenvalue / n if n > 0 else 0.0
+        # Rayleigh quotient: λ = bᵀ(Mb) = Σ b_new[i] * b[i] (b is already normalized)
+        eigenvalue = sum(b_new[i] * b[i] for i in range(n))
+        return abs(eigenvalue)
 
     def get_regime(self) -> PropagationRegime:
         rho = self.spectral_radius()

@@ -32,9 +32,34 @@ class TestContagionMatrix:
         assert cm.spectral_radius() == 0.0
 
     def test_spectral_radius_homogeneous(self):
+        """homogeneous(n, coeff) has spectral_radius = coeff * (n-1)."""
         cm = ContagionMatrix.homogeneous(3, 0.3)
         rho = cm.spectral_radius()
-        assert rho > 0
+        assert abs(rho - 0.6) < 0.01, f"expected 0.6, got {rho}"
+
+    def test_spectral_radius_homogeneous_5(self):
+        cm = ContagionMatrix.homogeneous(5, 0.2)
+        rho = cm.spectral_radius()
+        assert abs(rho - 0.8) < 0.01, f"expected 0.8, got {rho}"
+
+    def test_spectral_radius_ring(self):
+        """ring(n, coeff) has spectral_radius = coeff (permutation matrix)."""
+        cm = ContagionMatrix.ring(4, 0.5)
+        rho = cm.spectral_radius()
+        assert abs(rho - 0.5) < 0.01, f"expected 0.5, got {rho}"
+
+    def test_spectral_radius_chain(self):
+        """chain(n, coeff) is nilpotent → spectral_radius = 0."""
+        cm = ContagionMatrix.chain(5, 0.3)
+        rho = cm.spectral_radius()
+        assert rho == 0.0, f"expected 0.0 (nilpotent), got {rho}"
+
+    def test_spectral_radius_cascade_threshold(self):
+        """homogeneous(3, 0.9) has rho=1.8, well above cascade threshold."""
+        cm = ContagionMatrix.homogeneous(3, 0.9)
+        rho = cm.spectral_radius()
+        assert abs(rho - 1.8) < 0.01, f"expected 1.8, got {rho}"
+        assert cm.get_regime() == PropagationRegime.CASCADE
 
     def test_regime_suppression(self):
         cm = ContagionMatrix.homogeneous(3, 0.1)

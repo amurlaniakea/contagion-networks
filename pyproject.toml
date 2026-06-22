@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "contagion-networks"
+version = "0.1.0"
+description = "Evaluator Bias Propagation in Multi-Agent LLM Systems"
+readme = "README.md"
+license = {text = "AGPL-3.0"}
+authors = [
+    {name = "Pedro Sordo Martínez", email = "amurlaniakea@gmail.com"},
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[tool.setuptools.packages.find]
+include = ["contagion_networks*"]
